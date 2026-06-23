@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Darzi Assistant - درزی اسسٹنٹ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root, body.theme-blue { --theme-primary: #667eea; --theme-secondary: #764ba2; }
+        body.theme-green { --theme-primary: #11998e; --theme-secondary: #2d6a4f; }
+        body.theme-maroon { --theme-primary: #c0392b; --theme-secondary: #8e2348; }
+        body.theme-navy { --theme-primary: #34495e; --theme-secondary: #2c3e50; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Naskh Arabic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%); min-height: 100vh; padding: 0; color: #333; overflow-x: hidden; }
+
+        #appTitle, .section-title, .settings-header h2, .settings-section h3, .welcome-screen h3 { font-family: 'Noto Nastaliq Urdu', 'Segoe UI', serif; }
+
+        .welcome-screen { background: white; max-width: 500px; margin: 20px auto; padding: 30px 20px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; animation: fadeIn 0.5s; width: 95%; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .welcome-logo { font-size: 50px; color: var(--theme-primary); margin-bottom: 15px; }
+        .welcome-title { color: #333; margin-bottom: 8px; font-size: 24px; }
+        .welcome-subtitle { color: #666; margin-bottom: 25px; font-size: 15px; }
+
+        .app-container { display: none; max-width: 100%; margin: 0 auto; background: white; border-radius: 0; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); min-height: 100vh; }
+
+        .app-header { background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-secondary) 100%); color: white; padding: 15px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .header-left h1 { font-size: 18px; margin-bottom: 3px; }
+        .header-left p { opacity: 0.9; font-size: 12px; }
+
+        .settings-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: all 0.3s; }
+        .settings-btn:hover { background: rgba(255,255,255,0.3); transform: rotate(30deg); }
+
+        /* TABS - ALWAYS ROW, HORIZONTAL SCROLL */
+        .app-tabs { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; background: #f8f9fa; border-bottom: 2px solid var(--theme-primary); scrollbar-width: none; -ms-overflow-style: none; }
+        .app-tabs::-webkit-scrollbar { display: none; }
+
+        .tab-btn { flex: 0 0 auto; min-width: 110px; padding: 14px 16px; border: none; background: none; font-size: 14px; font-weight: 600; color: #555; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+        .tab-btn:hover { background: #e9ecef; }
+        .tab-btn.active { background: var(--theme-primary); color: white; }
+
+        .tab-content { display: none; padding: 15px; animation: slideUp 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .dashboard-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 18px 10px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-top: 4px solid var(--theme-primary); transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .stat-icon { font-size: 28px; color: var(--theme-primary); margin-bottom: 10px; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #333; margin-bottom: 3px; }
+        .stat-label { color: #666; font-size: 12px; }
+
+        .form-container { background: white; border-radius: 15px; padding: 20px 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .section-title { color: var(--theme-primary); margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 25px; }
+        @media (min-width: 600px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .dashboard-stats { grid-template-columns: repeat(4, 1fr); } }
+
+        .input-group { display: flex; flex-direction: column; }
+        label { font-weight: 600; margin-bottom: 8px; color: #555; font-size: 13px; }
+        input, select, textarea { padding: 14px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px; transition: all 0.3s; width: 100%; }
+        input:focus, select:focus, textarea:focus { border-color: var(--theme-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); outline: none; }
+
+        .measurements-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 20px 0; padding: 18px 12px; background: #f8f9fa; border-radius: 15px; }
+        @media (min-width: 600px) { .measurements-grid { grid-template-columns: repeat(4, 1fr); } }
+        .measure-item { display: flex; flex-direction: column; }
+
+        .pockets-section { background: #f8f9fa; padding: 18px 12px; border-radius: 15px; margin: 20px 0; }
+        .checkbox-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 15px; }
+        @media (min-width: 600px) { .checkbox-grid { grid-template-columns: repeat(2, 1fr); } }
+        .checkbox-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #555; padding: 8px; background: white; border-radius: 8px; }
+        .checkbox-item input { width: 22px; height: 22px; flex-shrink: 0; }
+
+        .action-buttons { display: flex; gap: 10px; margin-top: 25px; flex-direction: column; }
+        @media (min-width: 600px) { .action-buttons { flex-direction: row; } }
+
+        .btn { padding: 14px 20px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; }
+        .btn-primary { background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-secondary) 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3); }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+
+        .client-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .client-card { background: white; border-radius: 15px; padding: 18px 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-right: 5px solid var(--theme-primary); transition: all 0.3s; }
+        .client-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .client-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 8px; }
+        .client-code { background: var(--theme-primary); color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; flex-shrink: 0; }
+        .client-name { font-size: 18px; font-weight: bold; color: #333; word-break: break-word; }
+        .client-phone { color: #666; font-size: 13px; }
+
+        .settings-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: flex-end; z-index: 1000; }
+        .settings-content { background: white; width: 100%; max-width: 600px; max-height: 85vh; border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 40px rgba(0,0,0,0.3); animation: slideUpModal 0.3s; }
+        @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .settings-header { background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-secondary) 100%); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .settings-header h2 { font-size: 20px; }
+        .close-settings { background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+        .settings-body { padding: 20px 15px; max-height: 70vh; overflow-y: auto; }
+        .settings-section { margin-bottom: 25px; padding-bottom: 18px; border-bottom: 1px solid #e9ecef; }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-section h3 { color: var(--theme-primary); margin-bottom: 15px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; flex-direction: row; }
+        .hidden { display: none !important; }
+        .no-data { text-align: center; padding: 40px 20px; color: #999; font-size: 15px; }
+
+        .pockets-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .pocket-badge { background: #e3f2fd; color: #1976d2; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+
+        /* TRACKING */
+        .tracking-tabs { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px; scrollbar-width: none; -ms-overflow-style: none; }
+        .tracking-tabs::-webkit-scrollbar { display: none; }
+        .tracking-tab { flex: 0 0 auto; min-width: 85px; padding: 12px 14px; border: none; background: none; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; text-align: center; white-space: nowrap; }
+        .tracking-tab.active { background: var(--theme-primary); color: white; border-radius: 10px; }
+
+        .status-select { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 15px; margin-top: 8px; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; margin-right: 8px; }
+        .status-pending { background: #ffedd5; color: #9a3412; }
+        .status-measured { background: #dbeafe; color: #1e40af; }
+        .status-cutting { background: #f3e8ff; color: #6b21a8; }
+        .status-stitching { background: #dcfce7; color: #166534; }
+        .status-ready { background: #fee2e2; color: #991b1b; }
+        .status-delivered { background: #e5e7eb; color: #374151; }
+
+        .order-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .status-btn { padding: 8px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; color: white; font-weight: 500; flex: 1; min-width: 80px; }
+        .btn-measure { background: #3b82f6; } .btn-cutting { background: #8b5cf6; } .btn-stitching { background: #10b981; } .btn-ready { background: #ef4444; } .btn-delivered { background: #6b7280; }
+
+        .delivery-date { margin-top: 12px; padding: 10px; background: #f0f9ff; border-radius: 8px; border-right: 4px solid #3b82f6; font-size: 13px; }
+        .timeline { margin-top: 12px; padding-right: 15px; border-right: 2px solid #e9ecef; }
+        .timeline-item { position: relative; margin-bottom: 12px; padding-right: 18px; }
+        .timeline-item::before { content: ''; position: absolute; right: -9px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #e9ecef; border: 2px solid white; }
+        .timeline-item.active::before { background: var(--theme-primary); }
+        .timeline-item.completed::before { background: #10b981; }
+        .timeline-date { font-size: 11px; color: #888; margin-right: 8px; }
+
+        /* PHOTO UPLOAD */
+        .photo-upload-area { border: 2px dashed #ccc; border-radius: 12px; padding: 30px 15px; text-align: center; cursor: pointer; transition: all 0.3s; margin: 15px 0; }
+        .photo-upload-area:hover { border-color: var(--theme-primary); background: #f8f9ff; }
+        .photo-upload-area.has-photo { border-style: solid; border-color: var(--theme-primary); padding: 10px; }
+        .photo-preview { max-width: 100%; max-height: 200px; border-radius: 8px; }
+        .photo-upload-text { color: #888; font-size: 14px; }
+        .photo-upload-icon { font-size: 40px; margin-bottom: 10px; }
+
+        /* WHATSAPP */
+        .whatsapp-btn { background: #25d366; color: white; }
+        .whatsapp-btn:hover { background: #128c7e; }
+
+        /* DARK MODE */
+        body.dark-mode { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+        body.dark-mode .app-container, body.dark-mode .welcome-screen, body.dark-mode .settings-content, body.dark-mode .client-card, body.dark-mode .form-container, body.dark-mode .stat-card { background: #2d2d44; color: #e0e0e0; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #3d3d5c; border-color: #555; color: #e0e0e0; }
+        body.dark-mode .client-name, body.dark-mode .stat-value { color: #e0e0e0; }
+        body.dark-mode .app-tabs, body.dark-mode .tracking-tabs, body.dark-mode .measurements-grid, body.dark-mode .pockets-section { background: #3d3d5c; }
+        body.dark-mode .tab-btn, body.dark-mode .tracking-tab { color: #aaa; }
+        body.dark-mode .no-data { color: #888; }
+        body.dark-mode .section-title { color: var(--theme-primary); }
+
+        .dark-mode-toggle { position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px; border-radius: 50%; background: #333; color: #ffd700; border: none; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+        /* VOICE SEARCH */
+        .voice-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--theme-primary); color: white; font-size: 20px; cursor: pointer; flex-shrink: 0; }
+        .voice-btn.listening { animation: pulse-ring 1s infinite; }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(102, 126, 234, 0); } 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); } }
+
+        /* OFFLINE */
+        .offline-bar { background: #dc2626; color: white; text-align: center; padding: 8px; font-size: 13px; display: none; position: sticky; top: 0; z-index: 200; }
+        .offline-bar.show { display: block; }
+
+        /* REPORTS */
+        .report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 15px 0; }
+        .report-card { background: #f8f9fa; padding: 15px; border-radius: 12px; text-align: center; }
+        .report-value { font-size: 24px; font-weight: bold; color: var(--theme-primary); }
+        .report-label { font-size: 12px; color: #666; margin-top: 5px; }
+
+        .backup-info { background: #e0f2fe; border: 1px solid #3b82f6; border-radius: 8px; padding: 12px; font-size: 13px; color: #1e40af; margin: 10px 0; }
+
+        .notification-btn { background: #f59e0b; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; margin: 10px 0; }
+
+        .history-badge { background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+        .urgent-flag { background: #fee2e2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    </style>
+</head>
+<body>
+    <div id="offlineBar" class="offline-bar">⚠️ آپ آف لائن ہیں۔ ڈیٹا محفوظ ہے، جیسے ہی انٹرنیٹ آئے گا سب کام کرے گا۔</div>
+
+    <div id="welcomeScreen" class="welcome-screen">
+        <div class="welcome-logo">👕</div>
+        <h1 class="welcome-title">DARZI ASSISTANT</h1>
+        <p class="welcome-subtitle">درزی کا ذاتی پیمائش مینجر</p>
+        <div style="text-align: left;">
+            <h3 style="margin-bottom: 18px; color: #555; font-size: 16px;">اپنی معلومات درج کریں</h3>
+            <div class="input-group" style="margin-bottom: 15px;"><label>آپ کا نام *</label><input type="text" id="tailorName" dir="auto" placeholder="مثال: رحیم درزی" required></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>دکان کا نام</label><input type="text" id="shopName" dir="auto" placeholder="مثال: رحیم درزی سنٹر"></div>
+            <div class="input-group" style="margin-bottom: 15px;"><label>فون نمبر</label><input type="tel" id="tailorPhone" dir="auto" placeholder="03001234567"></div>
+            <div class="input-group" style="margin-bottom: 25px;"><label>پتہ</label><input type="text" id="tailorAddress" dir="auto" placeholder="شہر، علاقہ"></div>
+            <button class="btn btn-primary" onclick="startApp()" style="width: 100%;"><span>📱 ایپ شروع کریں</span></button>
+        </div>
+    </div>
+
+    <div id="appContainer" class="app-container">
+        <header class="app-header">
+            <div class="header-left"><h1 id="appTitle">DARZI ASSISTANT</h1><p id="welcomeText">خوش آمدید</p></div>
+            <button class="settings-btn" onclick="openSettings()">⚙️</button>
+        </header>
+
+        <div class="app-tabs">
+            <button class="tab-btn active" data-tab="dashboard" onclick="showTab('dashboard')">📊 ڈیش بورڈ</button>
+            <button class="tab-btn" data-tab="addClient" onclick="showTab('addClient')">➕ نیا کلائنٹ</button>
+            <button class="tab-btn" data-tab="tracking" onclick="showTab('tracking')">📋 آرڈر ٹریکنگ</button>
+            <button class="tab-btn" data-tab="searchClient" onclick="showTab('searchClient')">🔍 تلاش کریں</button>
+            <button class="tab-btn" data-tab="reports" onclick="showTab('reports')">📈 رپورٹس</button>
+        </div>
+
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-stats">
+                <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="totalClients">0</div><div class="stat-label">کل کلائنٹس</div></div>
+                <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" id="pendingOrders">0</div><div class="stat-label">زیر التواء</div></div>
+                <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="todayClients">0</div><div class="stat-label">آج کے کلائنٹس</div></div>
+                <div class="stat-card"><div class="stat-icon">🚚</div><div class="stat-value" id="deliveredOrders">0</div><div class="stat-label">ڈیلیور شدہ</div></div>
+            </div>
+            <div class="section-title"><span>🕒 حالیہ کلائنٹس</span></div>
+            <div class="client-list" id="recentClients">
+                <div class="no-data"><p>ابھی تک کوئی کلائنٹ نہیں ہے۔</p><p style="margin-top: 8px; font-size: 13px;">"نیا کلائنٹ" ٹیب پر جاکر پہلا کلائنٹ شامل کریں۔</p></div>
+            </div>
+        </div>
+
+        <div id="addClient" class="tab-content">
+            <div class="form-container">
+                <h2 class="section-title">➕ نیا کلائنٹ شامل کریں</h2>
+                <div id="editBanner" style="display:none; margin-bottom: 15px; padding: 12px; background: #fff3cd; border-radius: 10px; border-right: 4px solid #f59e0b; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span id="editBannerText" style="font-weight: 600; color: #92400e; font-size: 14px;"></span>
+                    <button class="btn" onclick="cancelEditClient()" style="background:#6c757d; color:white; padding: 8px 16px; flex: none; font-size: 13px;">❌ منسوخ کریں</button>
+                </div>
+                <div class="form-grid">
+                    <div class="input-group"><label>کلائنٹ کوڈ</label><input type="text" id="clientCode" value="TAI001" readonly></div>
+                    <div class="input-group"><label>نام *</label><input type="text" id="clientName" dir="auto" placeholder="کلائنٹ کا نام" required></div>
+                    <div class="input-group"><label>فون نمبر</label><input type="tel" id="clientPhone" dir="auto" placeholder="03001234567"></div>
+                    <div class="input-group"><label>تاریخ</label><input type="date" id="clientDate"></div>
+                    <div class="input-group"><label>آرڈر سٹیٹس</label><select id="orderStatus" class="status-select"><option value="pending">زیر التواء</option><option value="measured">پیمائش شدہ</option><option value="cutting">کٹنگ</option><option value="stitching">سِلائی</option><option value="ready">تیار</option></select></div>
+                    <div class="input-group"><label>ڈیلیوری تاریخ</label><input type="date" id="deliveryDate"></div>
+                    <div class="input-group"><label>کپڑے کی تفصیل</label><input type="text" id="fabricNote" dir="auto" placeholder="مثال: کسٹمر کا اپنا کپڑا، نیلا رنگ"></div>
+                    <div class="input-group"><label>ریٹ (₨)</label><input type="number" id="clientRate" placeholder="1500" min="0"></div>
+                    <div class="input-group"><label>بیعانہ / ایڈوانس (₨)</label><input type="number" id="clientAdvance" placeholder="500" min="0"></div>
+                    <div class="input-group"><label><input type="checkbox" id="urgentFlag" style="width: auto; margin-left: 8px;"> 🚨 جلدی چاہیے (Urgent)</label></div>
+                </div>
+                <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('clientPhoto').click()">
+                    <div id="photoUploadContent"><div class="photo-upload-icon">📷</div><div class="photo-upload-text">کپڑے یا ڈیزائن کی تصویر لگائیں</div><div style="font-size: 12px; color: #999; margin-top: 5px;">ٹچ کریں یا یہاں فائل ڈراپ کریں</div></div>
+                    <img id="photoPreview" class="photo-preview hidden" style="display: none;">
+                </div>
+                <input type="file" id="clientPhoto" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+                <button class="btn btn-secondary" onclick="clearPhoto()" id="clearPhotoBtn" style="display: none; margin-top: 10px; font-size: 13px; padding: 8px;">🗑️ تصویر ہٹائیں</button>
+
+                <h3 class="section-title">📏 پیمائشیں (انچ)</h3>
+                <div class="measurements-grid" id="measurementsGrid">
+                    <div class="measure-item"><label>لمبائی (قمیض)</label><input type="number" id="lambai" placeholder="42" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>چھاتی</label><input type="number" id="chati" placeholder="40" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>تیرہ (کندھے)</label><input type="number" id="teera" placeholder="18" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>گلا</label><input type="number" id="gala" placeholder="16" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>بازو (کف)</label><input type="number" id="bazu" placeholder="9" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>گھیرا (قمیض)</label><input type="number" id="ghera" placeholder="44" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>شلوار لمبائی</label><input type="number" id="shalwarLength" placeholder="38" step="0.5" min="0"></div>
+                    <div class="measure-item"><label>پہنچا</label><input type="number" id="pohancha" placeholder="10" step="0.5" min="0"></div>
+                </div>
+
+                <div class="pockets-section">
+                    <h3 class="section-title">🎒 جیب کا انتخاب</h3>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-item"><input type="checkbox" id="pocketSide" value="side"><label for="pocketSide">سائیڈ جیبیں (2) - قمیض</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="pocketFront" value="front"><label for="pocketFront">سامنے والی جیب (1) - قمیض</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="pocketChest" value="chest"><label for="pocketChest">چھاتی جیب (1) - قمیض</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="pocketShalwarSide" value="shalwar_side"><label for="pocketShalwarSide">سائیڈ جیبیں (2) - شلوار</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="pocketShalwarBack" value="shalwar_back"><label for="pocketShalwarBack">پیچھے والی جیب (1) - شلوار</label></div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 12px; background: #e8f5e9; border-radius: 10px; font-size: 14px;"><strong>کل منتخب جیبیں: <span id="totalPocketsCount">0</span></strong></div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="saveClientBtn" onclick="saveClient()">💾 کلائنٹ محفوظ کریں</button>
+                    <button class="btn btn-secondary" onclick="resetForm()">🔄 ری سیٹ فارم</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tracking" class="tab-content">
+            <div class="form-container">
+                <h2 class="section-title">📋 آرڈر ٹریکنگ</h2>
+                <div class="tracking-tabs">
+                    <button class="tracking-tab active" data-filter="all" onclick="filterTracking('all')">تمام</button>
+                    <button class="tracking-tab" data-filter="pending" onclick="filterTracking('pending')">زیر التواء</button>
+                    <button class="tracking-tab" data-filter="measured" onclick="filterTracking('measured')">پیمائش شدہ</button>
+                    <button class="tracking-tab" data-filter="cutting" onclick="filterTracking('cutting')">کٹنگ</button>
+                    <button class="tracking-tab" data-filter="stitching" onclick="filterTracking('stitching')">سِلائی</button>
+                    <button class="tracking-tab" data-filter="ready" onclick="filterTracking('ready')">تیار</button>
+                    <button class="tracking-tab" data-filter="delivered" onclick="filterTracking('delivered')">ڈیلیور شدہ</button>
+                </div>
+                <div class="search-box" style="flex-direction: row;">
+                    <input type="text" id="trackingSearch" dir="auto" placeholder="آرڈر کوڈ یا نام سے تلاش کریں..." onkeyup="filterTracking()" style="flex: 1;">
+                    <button class="voice-btn" onclick="startVoiceSearch('tracking')" title="آواز سے تلاش">🎤</button>
+                </div>
+                <div id="trackingList" class="client-list">
+                    <div class="no-data"><p>ابھی تک کوئی آرڈر نہیں ہے۔</p><p style="margin-top: 8px; font-size: 13px;">"نیا کلائنٹ" ٹیب پر جاکر پہلا آرڈر شامل کریں۔</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="searchClient" class="tab-content">
+            <div class="form-container">
+                <h2 class="section-title">🔍 تلاش کریں</h2>
+                <div class="search-box" style="flex-direction: row;">
+                    <input type="text" id="searchInput" dir="auto" placeholder="کوڈ، نام، فون یا تاریخ سے تلاش کریں..." style="flex: 1;">
+                    <button class="voice-btn" onclick="startVoiceSearch('search')" title="آواز سے تلاش">🎤</button>
+                    <button class="btn btn-primary" onclick="performSearch()" style="flex: none; padding: 14px 20px;">🔍 تلاش</button>
+                </div>
+                <div class="client-list" id="searchResults">
+                    <div class="no-data"><p>تلاش شروع کرنے کے لئے اوپر سرچ باکس استعمال کریں۔</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="reports" class="tab-content">
+            <div class="form-container">
+                <h2 class="section-title">📈 ماہانہ رپورٹ</h2>
+                <div class="report-grid">
+                    <div class="report-card"><div class="report-value" id="reportTotalOrders">0</div><div class="report-label">کل آرڈرز</div></div>
+                    <div class="report-card"><div class="report-value" id="reportDelivered">0</div><div class="report-label">ڈیلیور شدہ</div></div>
+                    <div class="report-card"><div class="report-value" id="reportTotalEarning">₨0</div><div class="report-label">کل کمائی</div></div>
+                    <div class="report-card"><div class="report-value" id="reportPending">0</div><div class="report-label">زیر التواء</div></div>
+                </div>
+                <div class="backup-info"><strong>💡 آٹو بیک اپ:</strong> ہر 7 دن بعد آپ کا ڈیٹا خود بخود محفوظ ہو جاتا ہے۔ مینوئل بیک اپ کے لیے ترتیبات میں جائیں۔</div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="exportData()">📥 ابھی بیک اپ لیں</button>
+                    <button class="btn btn-secondary" onclick="importData()">📤 بیک اپ لوڈ کریں</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="ڈارک موڈ">🌙</button>
+
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-content">
+            <div class="settings-header"><h2>⚙️ ترتیبات</h2><button class="close-settings" onclick="closeSettings()">✕</button></div>
+            <div class="settings-body">
+                <div class="settings-section">
+                    <h3>🎨 ظاہری شکل (تھیم)</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="theme-swatch" data-theme="blue" onclick="applyTheme('blue')" style="flex: 1; min-width: 60px; padding: 12px 6px; border-radius: 10px; border: 3px solid transparent; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; font-size: 13px;">نیلا</button>
+                        <button class="theme-swatch" data-theme="green" onclick="applyTheme('green')" style="flex: 1; min-width: 60px; padding: 12px 6px; border-radius: 10px; border: 3px solid transparent; cursor: pointer; background: linear-gradient(135deg, #11998e 0%, #2d6a4f 100%); color: white; font-weight: 600; font-size: 13px;">سبز</button>
+                        <button class="theme-swatch" data-theme="maroon" onclick="applyTheme('maroon')" style="flex: 1; min-width: 60px; padding: 12px 6px; border-radius: 10px; border: 3px solid transparent; cursor: pointer; background: linear-gradient(135deg, #c0392b 0%, #8e2348 100%); color: white; font-weight: 600; font-size: 13px;">گہرا سرخ</button>
+                        <button class="theme-swatch" data-theme="navy" onclick="applyTheme('navy')" style="flex: 1; min-width: 60px; padding: 12px 6px; border-radius: 10px; border: 3px solid transparent; cursor: pointer; background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; font-weight: 600; font-size: 13px;">نیوی</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>👤 ذاتی معلومات</h3>
+                    <div class="form-grid">
+                        <div class="input-group"><label>آپ کا نام</label><input type="text" id="settingsName" dir="auto"></div>
+                        <div class="input-group"><label>دکان کا نام</label><input type="text" id="settingsShop" dir="auto"></div>
+                        <div class="input-group"><label>فون نمبر</label><input type="tel" id="settingsPhone" dir="auto"></div>
+                        <div class="input-group"><label>پتہ</label><input type="text" id="settingsAddress" dir="auto"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>📏 پیمائش کے فیلڈز</h3>
+                    <p style="color:#888; font-size: 12px; margin-bottom: 12px;">یہاں سے آرڈر شامل کرتے وقت پیمائش کے فیلڈز کا نام، ترتیب بدلیں، یا نیا فیلڈ شامل کریں۔</p>
+                    <div id="measurementFieldsSettings"></div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;"><input type="text" id="newFieldLabel" dir="auto" placeholder="نئے فیلڈ کا نام (مثال: کندھا)" style="flex:1; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;"><button class="btn btn-primary" onclick="addMeasurementField()" style="flex: none; padding: 12px 16px; font-size: 14px;">➕ شامل کریں</button></div>
+                </div>
+                <div class="settings-section">
+                    <h3>🔔 نوٹیفکیشنز</h3>
+                    <button class="notification-btn" onclick="requestNotificationPermission()">🔔 یاد دہانی آن کریں</button>
+                    <p style="color: #888; font-size: 12px; margin-top: 8px;">ڈیلیوری سے پہلے آپ کو یاد دہانی ملے گی۔</p>
+                </div>
+                <div class="settings-section">
+                    <h3>💾 ڈیٹا مینجمنٹ</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="exportData()">📥 ایکسپورٹ</button>
+                        <button class="btn btn-secondary" onclick="importData()">📤 امپورٹ</button>
+                        <button class="btn" onclick="resetAllData()" style="background: #e53e3e; color: white;">🗑️ حذف</button>
+                    </div>
+                </div>
+                <div class="action-buttons"><button class="btn btn-primary" onclick="saveSettings()">💾 ترتیبات محفوظ کریں</button></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+// ===== APP STATE =====
+const DEFAULT_MEASUREMENT_FIELDS = [
+    { id: 'lambai', label: 'لمبائی (قمیض)', placeholder: '42' },
+    { id: 'chati', label: 'چھاتی', placeholder: '40' },
+    { id: 'teera', label: 'تیرہ (کندھے)', placeholder: '18' },
+    { id: 'gala', label: 'گلا', placeholder: '16' },
+    { id: 'bazu', label: 'بازو (کف)', placeholder: '9' },
+    { id: 'ghera', label: 'گھیرا (قمیض)', placeholder: '44' },
+    { id: 'shalwarLength', label: 'شلوار لمبائی', placeholder: '38' },
+    { id: 'pohancha', label: 'پہنچا', placeholder: '10' }
+];
+
+let appState = {
+    profile: null,
+    clients: [],
+    theme: 'blue',
+    currentTrackingFilter: 'all',
+    codeCounter: 0,
+    editingClientId: null,
+    measurementFields: [],
+    darkMode: false,
+    photoData: null
+};
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('darziTheme') || 'blue';
+    applyTheme(savedTheme);
+
+    const savedDark = localStorage.getItem('darziDarkMode') === 'true';
+    if (savedDark) toggleDarkMode();
+
+    const today = new Date();
+    document.getElementById('clientDate').valueAsDate = today;
+
+    const deliveryDate = new Date();
+    deliveryDate.setDate(today.getDate() + 3);
+    document.getElementById('deliveryDate').valueAsDate = deliveryDate;
+
+    const savedProfile = localStorage.getItem('darziProfile');
+    if (savedProfile) {
+        appState.profile = JSON.parse(savedProfile);
+        showApp();
+    }
+
+    const savedFields = localStorage.getItem('darziMeasurementFields');
+    appState.measurementFields = savedFields ? JSON.parse(savedFields) : JSON.parse(JSON.stringify(DEFAULT_MEASUREMENT_FIELDS));
+    renderSettingsFieldsList();
+
+    const savedClients = localStorage.getItem('darziClients');
+    if (savedClients) {
+        appState.clients = JSON.parse(savedClients);
+        updateDashboard();
+        loadTrackingList();
+        updateReports();
+    }
+
+    const savedCounter = parseInt(localStorage.getItem('darziCodeCounter') || '0');
+    appState.codeCounter = Math.max(savedCounter, getMaxCodeNumber());
+    localStorage.setItem('darziCodeCounter', appState.codeCounter);
+    generateNextCode();
+
+    updatePocketCount();
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updatePocketCount);
+    });
+
+    window.addEventListener('online', () => document.getElementById('offlineBar').classList.remove('show'));
+    window.addEventListener('offline', () => document.getElementById('offlineBar').classList.add('show'));
+    if (!navigator.onLine) document.getElementById('offlineBar').classList.add('show');
+
+    checkAutoBackup();
+});
+
+// ===== WELCOME SCREEN =====
+function startApp() {
+    const name = document.getElementById('tailorName').value.trim();
+    if (!name) { alert('براہ کرم اپنا نام درج کریں۔'); return; }
+
+    appState.profile = {
+        name: name,
+        shopName: document.getElementById('shopName').value.trim() || name + ' سنٹر',
+        phone: document.getElementById('tailorPhone').value.trim(),
+        address: document.getElementById('tailorAddress').value.trim(),
+        setupDate: new Date().toISOString()
+    };
+
+    localStorage.setItem('darziProfile', JSON.stringify(appState.profile));
+    document.getElementById('welcomeScreen').style.display = 'none';
+    showApp();
+}
+
+function showApp() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+    updateProfileDisplay();
+}
+
+function updateProfileDisplay() {
+    if (!appState.profile) return;
+    document.getElementById('appTitle').textContent = appState.profile.shopName || 'DARZI ASSISTANT';
+    document.getElementById('welcomeText').textContent = appState.profile.name + ' صاحب، خوش آمدید';
+    document.getElementById('settingsName').value = appState.profile.name || '';
+    document.getElementById('settingsShop').value = appState.profile.shopName || '';
+    document.getElementById('settingsPhone').value = appState.profile.phone || '';
+    document.getElementById('settingsAddress').value = appState.profile.address || '';
+}
+
+// ===== TAB NAVIGATION =====
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    const targetBtn = document.querySelector('.tab-btn[data-tab="' + tabName + '"]');
+    if (targetBtn) targetBtn.classList.add('active');
+
+    if (tabName === 'dashboard') updateDashboard();
+    else if (tabName === 'tracking') loadTrackingList();
+    else if (tabName === 'reports') updateReports();
+    else if (tabName === 'searchClient') {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResults').innerHTML = '<div class="no-data"><p>تلاش شروع کرنے کے لئے اوپر سرچ باکس استعمال کریں۔</p></div>';
+    }
+}
+
+// ===== PHOTO UPLOAD =====
+function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        appState.photoData = e.target.result;
+        document.getElementById('photoPreview').src = e.target.result;
+        document.getElementById('photoPreview').style.display = 'block';
+        document.getElementById('photoUploadContent').style.display = 'none';
+        document.getElementById('photoUploadArea').classList.add('has-photo');
+        document.getElementById('clearPhotoBtn').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+    appState.photoData = null;
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoUploadContent').style.display = 'block';
+    document.getElementById('photoUploadArea').classList.remove('has-photo');
+    document.getElementById('clearPhotoBtn').style.display = 'none';
+    document.getElementById('clientPhoto').value = '';
+}
+
+// ===== MEASUREMENTS =====
+function getMeasurementsFromForm() {
+    const result = {};
+    appState.measurementFields.forEach(field => {
+        const el = document.getElementById(field.id);
+        result[field.id] = el ? (el.value || '') : '';
+    });
+    return result;
+}
+
+function getMeasurementPreview(client, count) {
+    count = count || 3;
+    return appState.measurementFields.slice(0, count).map(field => {
+        const val = (client.measurements && client.measurements[field.id]) || '--';
+        return field.label + ': ' + val + (val !== '--' ? '"' : '');
+    }).join(' | ');
+}
+
+function getFullMeasurementDivs(client) {
+    return appState.measurementFields.map(field => {
+        const val = (client.measurements && client.measurements[field.id]) || '--';
+        return '<div><strong>' + field.label + ':</strong> ' + val + (val !== '--' ? '"' : '') + '</div>';
+    }).join('');
+}
+
+// ===== CLIENT MANAGEMENT =====
+function getMaxCodeNumber() {
+    let max = 0;
+    appState.clients.forEach(c => {
+        const match = c.code && c.code.match(/(\d+)$/);
+        if (match) { const num = parseInt(match[1]); if (num > max) max = num; }
+    });
+    return max;
+}
+
+function generateNextCode() {
+    document.getElementById('clientCode').value = 'TAI' + (appState.codeCounter + 1).toString().padStart(3, '0');
+}
+
+function updatePocketCount() {
+    let total = 0;
+    const pocketValues = { 'pocketSide': 2, 'pocketFront': 1, 'pocketChest': 1, 'pocketShalwarSide': 2, 'pocketShalwarBack': 1 };
+    for (const [id, value] of Object.entries(pocketValues)) {
+        if (document.getElementById(id).checked) total += value;
+    }
+    document.getElementById('totalPocketsCount').textContent = total;
+    return total;
+}
+
+function saveClient() {
+    const name = document.getElementById('clientName').value.trim();
+    if (!name) { alert('براہ کرم کلائنٹ کا نام درج کریں۔'); return; }
+
+    const rate = parseFloat(document.getElementById('clientRate').value) || 0;
+    const advance = parseFloat(document.getElementById('clientAdvance').value) || 0;
+    if (advance > rate) { alert('بیعانہ ریٹ سے زیادہ نہیں ہو سکتا۔'); return; }
+
+    const orderDate = document.getElementById('clientDate').value;
+    const deliveryDate = document.getElementById('deliveryDate').value;
+    if (deliveryDate && new Date(deliveryDate) < new Date(orderDate)) {
+        alert('ڈیلیوری تاریخ آرڈر تاریخ سے پہلے نہیں ہو سکتی۔'); return;
+    }
+
+    const pockets = [];
+    if (document.getElementById('pocketSide').checked) pockets.push('سائیڈ جیبیں (قمیض)');
+    if (document.getElementById('pocketFront').checked) pockets.push('سامنے والی جیب (قمیض)');
+    if (document.getElementById('pocketChest').checked) pockets.push('چھاتی جیب (قمیض)');
+    if (document.getElementById('pocketShalwarSide').checked) pockets.push('سائیڈ جیبیں (شلوار)');
+    if (document.getElementById('pocketShalwarBack').checked) pockets.push('پیچھے والی جیب (شلوار)');
+
+    const newStatus = document.getElementById('orderStatus').value;
+
+    if (appState.editingClientId) {
+        const index = appState.clients.findIndex(c => c.id == appState.editingClientId);
+        if (index === -1) { alert('کلائنٹ نہیں ملا، شاید حذف ہو گیا ہے۔'); exitEditMode(); return; }
+
+        const existing = appState.clients[index];
+        const statusChanged = existing.status !== newStatus;
+
+        existing.name = name;
+        existing.phone = document.getElementById('clientPhone').value.trim();
+        existing.date = orderDate || existing.date;
+        existing.deliveryDate = deliveryDate;
+        existing.status = newStatus;
+        existing.fabricNote = document.getElementById('fabricNote').value.trim();
+        existing.rate = rate;
+        existing.advance = advance;
+        existing.baqaya = rate - advance;
+        existing.measurements = getMeasurementsFromForm();
+        existing.pockets = pockets;
+        existing.totalPockets = updatePocketCount();
+        existing.photo = appState.photoData;
+        existing.urgent = document.getElementById('urgentFlag').checked;
+
+        if (statusChanged) {
+            if (!existing.statusHistory) existing.statusHistory = [];
+            existing.statusHistory.push({ status: newStatus, date: new Date().toLocaleDateString('ur-PK'), time: new Date().toLocaleTimeString('ur-PK'), note: 'ترمیم کے ذریعے تبدیل ہوا' });
+        }
+
+        localStorage.setItem('darziClients', JSON.stringify(appState.clients));
+        alert('کلائنٹ ' + existing.code + ' کامیابی سے اپڈیٹ ہو گیا!');
+        resetForm();
+        updateDashboard();
+        loadTrackingList();
+        updateReports();
+        showTab('tracking');
+        return;
+    }
+
+    const client = {
+        id: Date.now(),
+        code: document.getElementById('clientCode').value,
+        name: name,
+        phone: document.getElementById('clientPhone').value.trim(),
+        date: orderDate || new Date().toISOString().split('T')[0],
+        deliveryDate: deliveryDate,
+        status: newStatus,
+        fabricNote: document.getElementById('fabricNote').value.trim(),
+        rate: rate,
+        advance: advance,
+        baqaya: rate - advance,
+        measurements: getMeasurementsFromForm(),
+        pockets: pockets,
+        totalPockets: updatePocketCount(),
+        photo: appState.photoData,
+        urgent: document.getElementById('urgentFlag').checked,
+        statusHistory: [{ status: newStatus, date: new Date().toLocaleDateString('ur-PK'), time: new Date().toLocaleTimeString('ur-PK') }]
+    };
+
+    appState.clients.push(client);
+    localStorage.setItem('darziClients', JSON.stringify(appState.clients));
+
+    appState.codeCounter += 1;
+    localStorage.setItem('darziCodeCounter', appState.codeCounter);
+
+    alert('کلائنٹ ' + client.code + ' کامیابی سے محفوظ ہو گیا!');
+    resetForm();
+    generateNextCode();
+    updateDashboard();
+    loadTrackingList();
+    updateReports();
+    showTab('tracking');
+}
+
+function resetForm() {
+    document.getElementById('clientName').value = '';
+    document.getElementById('clientPhone').value = '';
+    document.getElementById('fabricNote').value = '';
+    document.getElementById('clientRate').value = '';
+    document.getElementById('clientAdvance').value = '';
+    document.getElementById('clientDate').valueAsDate = new Date();
+    const deliveryDate = new Date(); deliveryDate.setDate(deliveryDate.getDate() + 3);
+    document.getElementById('deliveryDate').valueAsDate = deliveryDate;
+    document.getElementById('orderStatus').value = 'pending';
+    document.getElementById('urgentFlag').checked = false;
+
+    appState.measurementFields.forEach(field => {
+        const el = document.getElementById(field.id);
+        if (el) el.value = '';
+    });
+    document.querySelectorAll('#addClient input[type="checkbox"]').forEach(checkbox => { checkbox.checked = false; });
+
+    clearPhoto();
+    updatePocketCount();
+    exitEditMode();
+}
+
+function exitEditMode() {
+    appState.editingClientId = null;
+    const banner = document.getElementById('editBanner');
+    if (banner) banner.style.display = 'none';
+    const saveBtn = document.getElementById('saveClientBtn');
+    if (saveBtn) saveBtn.innerHTML = '💾 کلائنٹ محفوظ کریں';
+    generateNextCode();
+}
+
+// ===== TRACKING SYSTEM =====
+function filterTracking(filterType) {
+    if (filterType) {
+        appState.currentTrackingFilter = filterType;
+        document.querySelectorAll('.tracking-tab').forEach(tab => tab.classList.remove('active'));
+        const targetTab = document.querySelector('.tracking-tab[data-filter="' + filterType + '"]');
+        if (targetTab) targetTab.classList.add('active');
+    }
+    const searchTerm = document.getElementById('trackingSearch').value.toLowerCase();
+    loadTrackingList(searchTerm);
+}
+
+function loadTrackingList(searchTerm) {
+    searchTerm = searchTerm || '';
+    const container = document.getElementById('trackingList');
+
+    if (appState.clients.length === 0) {
+        container.innerHTML = '<div class="no-data"><p>ابھی تک کوئی آرڈر نہیں ہے۔</p><p style="margin-top: 8px; font-size: 13px;">"نیا کلائنٹ" ٹیب پر جاکر پہلا آرڈر شامل کریں۔</p></div>';
+        return;
+    }
+
+    let filteredClients = appState.clients;
+    if (appState.currentTrackingFilter !== 'all') {
+        filteredClients = filteredClients.filter(client => client.status === appState.currentTrackingFilter);
+    }
+    if (searchTerm) {
+        filteredClients = filteredClients.filter(client => 
+            client.code.toLowerCase().includes(searchTerm) ||
+            client.name.toLowerCase().includes(searchTerm) ||
+            (client.phone && client.phone.includes(searchTerm))
+        );
+    }
+
+    if (filteredClients.length === 0) {
+        container.innerHTML = '<div class="no-data"><p>کوئی آرڈر نہیں ملا۔</p></div>';
+        return;
+    }
+
+    let html = '';
+    filteredClients.reverse().forEach(client => {
+        html += createTrackingCard(client);
+    });
+    container.innerHTML = html;
+}
+
+function createTrackingCard(client) {
+    const statusText = getStatusText(client.status);
+    const statusClass = getStatusClass(client.status);
+
+    let statusButtons = '';
+    if (client.status !== 'delivered') {
+        statusButtons = '<div class="order-actions">';
+        if (client.status !== 'measured') statusButtons += '<button class="status-btn btn-measure" onclick="updateStatus(' + client.id + ', ' + "'measured'" + ')">📏 پیمائش</button>';
+        if (client.status !== 'cutting') statusButtons += '<button class="status-btn btn-cutting" onclick="updateStatus(' + client.id + ', ' + "'cutting'" + ')">✂️ کٹنگ</button>';
+        if (client.status !== 'stitching') statusButtons += '<button class="status-btn btn-stitching" onclick="updateStatus(' + client.id + ', ' + "'stitching'" + ')">🧵 سِلائی</button>';
+        if (client.status !== 'ready') statusButtons += '<button class="status-btn btn-ready" onclick="updateStatus(' + client.id + ', ' + "'ready'" + ')">✅ تیار</button>';
+        statusButtons += '<button class="status-btn btn-delivered" onclick="updateStatus(' + client.id + ', ' + "'delivered'" + ')">🚚 ڈیلیور</button></div>';
+    }
+
+    let timeline = '';
+    if (client.statusHistory && client.statusHistory.length > 0) {
+        timeline = '<div class="timeline">';
+        client.statusHistory.forEach((history, index) => {
+            const isCurrent = index === client.statusHistory.length - 1;
+            timeline += '<div class="timeline-item ' + (isCurrent ? 'active' : 'completed') + '"><strong>' + getStatusText(history.status) + '</strong><span class="timeline-date">' + history.date + ' ' + (history.time || '') + '</span></div>';
+        });
+        timeline += '</div>';
+    }
+
+    let urgentBadge = client.urgent ? '<span class="urgent-flag">🚨 جلدی</span>' : '';
+    let historyBadge = '';
+    const visitCount = appState.clients.filter(c => c.name === client.name).length;
+    if (visitCount > 1) historyBadge = '<span class="history-badge">' + visitCount + ' بار آیا</span>';
+
+    let photoHtml = '';
+    if (client.photo) {
+        photoHtml = '<div style="margin: 10px 0;"><img src="' + client.photo + '" style="max-width: 100%; max-height: 150px; border-radius: 8px;"></div>';
+    }
+
+    let whatsappBtn = '';
+    if (client.phone) {
+        const msg = 'آسسلام علیکم ' + client.name + ' صاحب،\nآپ کا آرڈر ' + client.code + ' ' + getStatusText(client.status) + ' ہے۔\nباقی رقم: ₨' + (client.baqaya || 0);
+        whatsappBtn = '<a href="https://wa.me/' + client.phone.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg) + '" target="_blank" class="btn whatsapp-btn" style="text-decoration: none; flex: 1; padding: 10px; font-size: 13px;">📱 WhatsApp</a>';
+    }
+
+    return '<div class="client-card"><div class="client-header"><div><div class="client-name">' + client.name + urgentBadge + historyBadge + '<span class="status-badge ' + statusClass + '">' + statusText + '</span></div><div class="client-phone">' + (client.phone || 'فون نمبر نہیں') + '</div></div><div class="client-code">' + client.code + '</div></div><div style="margin: 12px 0; color: #666; font-size: 13px;"><div><strong>آرڈر تاریخ:</strong> ' + client.date + '</div>' + (client.deliveryDate ? '<div><strong>ڈیلیوری تاریخ:</strong> ' + client.deliveryDate + '</div>' : '') + '</div>' + photoHtml + '<div style="margin: 12px 0; font-size: 13px;"><div><strong>پیمائشیں:</strong></div><div>' + getMeasurementPreview(client) + '</div></div><div style="margin: 12px 0; font-size: 13px; color: #555;"><strong>💰 ریٹ: ₨' + (client.rate || 0) + '</strong> | بیعانہ: ₨' + (client.advance || 0) + ' | باقی: ₨' + (client.baqaya || 0) + (client.fabricNote ? '<div style="margin-top: 5px;"><strong>کپڑا:</strong> ' + client.fabricNote + '</div>' : '') + '</div>' + statusButtons + timeline + '<div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">' + whatsappBtn + '<button class="btn" onclick="printBill(' + client.id + ')" style="flex: 1; padding: 10px; background: #3b82f6; color: white; font-size: 13px;">🧾 بل پرنٹ</button><button class="btn" onclick="editClient(' + client.id + ')" style="flex: 1; padding: 10px; background: #f59e0b; color: white; font-size: 13px;">✏️ ترمیم</button><button class="btn" onclick="deleteClient(' + client.id + ')" style="flex: 1; padding: 10px; background: #e53e3e; color: white; font-size: 13px;">🗑️ حذف</button></div></div>';
+}
+
+function updateStatus(clientId, newStatus) {
+    const client = appState.clients.find(c => c.id == clientId);
+    if (!client) return;
+    const oldStatus = client.status;
+    client.status = newStatus;
+    if (!client.statusHistory) client.statusHistory = [];
+    client.statusHistory.push({ status: newStatus, date: new Date().toLocaleDateString('ur-PK'), time: new Date().toLocaleTimeString('ur-PK'), note: 'تبدیل شدہ: ' + getStatusText(oldStatus) + ' → ' + getStatusText(newStatus) });
+    localStorage.setItem('darziClients', JSON.stringify(appState.clients));
+    updateDashboard();
+    loadTrackingList();
+    updateReports();
+    alert('آرڈر ' + client.code + ' کی سٹیٹس تبدیل ہو گئی: ' + getStatusText(newStatus));
+}
+
+function getStatusText(status) {
+    const texts = { 'pending': 'زیر التواء', 'measured': 'پیمائش شدہ', 'cutting': 'کٹنگ', 'stitching': 'سِلائی', 'ready': 'تیار', 'delivered': 'ڈیلیور شدہ' };
+    return texts[status] || status;
+}
+
+function getStatusClass(status) {
+    return 'status-' + status;
+}
+
+// ===== DASHBOARD =====
+function updateDashboard() {
+    const today = new Date().toISOString().split('T')[0];
+    const pending = appState.clients.filter(c => c.status === 'pending').length;
+    const delivered = appState.clients.filter(c => c.status === 'delivered').length;
+
+    document.getElementById('totalClients').textContent = appState.clients.length;
+    document.getElementById('todayClients').textContent = appState.clients.filter(c => c.date === today).length;
+    document.getElementById('pendingOrders').textContent = pending;
+    document.getElementById('deliveredOrders').textContent = delivered;
+
+    const container = document.getElementById('recentClients');
+    if (appState.clients.length === 0) {
+        container.innerHTML = '<div class="no-data"><p>ابھی تک کوئی کلائنٹ نہیں ہے۔</p><p style="margin-top: 8px; font-size: 13px;">"نیا کلائنٹ" ٹیب پر جاکر پہلا کلائنٹ شامل کریں۔</p></div>';
+        return;
+    }
+
+    let html = '';
+    const recent = appState.clients.slice(-5).reverse();
+    recent.forEach(client => {
+        const statusText = getStatusText(client.status);
+        const statusClass = getStatusClass(client.status);
+        let urgentBadge = client.urgent ? '<span class="urgent-flag">🚨 جلدی</span>' : '';
+        html += '<div class="client-card"><div class="client-header"><div><div class="client-name">' + client.name + urgentBadge + '<span class="status-badge ' + statusClass + '">' + statusText + '</span></div><div class="client-phone">' + (client.phone || 'فون نمبر نہیں') + '</div></div><div class="client-code">' + client.code + '</div></div><div style="margin: 12px 0; color: #666; font-size: 13px;"><div>' + getMeasurementPreview(client, 2) + '</div><div>سٹیٹس: ' + statusText + ' | تاریخ: ' + client.date + '</div><div>💰 ریٹ: ₨' + (client.rate || 0) + ' | باقی: ₨' + (client.baqaya || 0) + '</div></div>' + (client.deliveryDate ? '<div class="delivery-date"><strong>ڈیلیوری تاریخ:</strong> ' + client.deliveryDate + '</div>' : '') + '</div>';
+    });
+    container.innerHTML = html;
+}
+
+// ===== REPORTS =====
+function updateReports() {
+    const total = appState.clients.length;
+    const delivered = appState.clients.filter(c => c.status === 'delivered').length;
+    const pending = appState.clients.filter(c => c.status !== 'delivered').length;
+    const totalEarning = appState.clients.reduce((sum, c) => sum + (c.rate || 0), 0);
+
+    document.getElementById('reportTotalOrders').textContent = total;
+    document.getElementById('reportDelivered').textContent = delivered;
+    document.getElementById('reportTotalEarning').textContent = '₨' + totalEarning.toLocaleString();
+    document.getElementById('reportPending').textContent = pending;
+}
+
+// ===== SEARCH =====
+function performSearch() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    const container = document.getElementById('searchResults');
+
+    if (!query) {
+        container.innerHTML = '<div class="no-data"><p>تلاش شروع کرنے کے لئے اوپر سرچ باکس استعمال کریں۔</p></div>';
+        return;
+    }
+
+    const results = appState.clients.filter(client => 
+        client.code.toLowerCase().includes(query) ||
+        client.name.toLowerCase().includes(query) ||
+        (client.phone && client.phone.includes(query)) ||
+        client.date.includes(query)
+    );
+
+    if (results.length === 0) {
+        container.innerHTML = '<div class="no-data"><p>"' + query + '" سے کوئی کلائنٹ نہیں ملا۔</p></div>';
+        return;
+    }
+
+    let html = '';
+    results.reverse().forEach(client => {
+        const statusText = getStatusText(client.status);
+        const statusClass = getStatusClass(client.status);
+        let photoHtml = client.photo ? '<div style="margin: 10px 0;"><img src="' + client.photo + '" style="max-width: 100%; max-height: 150px; border-radius: 8px;"></div>' : '';
+        html += '<div class="client-card"><div class="client-header"><div><div class="client-name">' + client.name + '<span class="status-badge ' + statusClass + '">' + statusText + '</span></div><div class="client-phone">' + (client.phone || 'فون نمبر نہیں') + '</div></div><div class="client-code">' + client.code + '</div></div>' + photoHtml + '<div style="margin: 12px 0;"><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;">' + getFullMeasurementDivs(client) + '</div></div><div style="margin: 12px 0; color: #666; font-size: 13px;"><div><strong>سٹیٹس:</strong> ' + statusText + '</div><div><strong>آرڈر تاریخ:</strong> ' + client.date + '</div>' + (client.deliveryDate ? '<div><strong>ڈیلیوری تاریخ:</strong> ' + client.deliveryDate + '</div>' : '') + '<div><strong>💰 ریٹ:</strong> ₨' + (client.rate || 0) + ' | بیعانہ: ₨' + (client.advance || 0) + ' | باقی: ₨' + (client.baqaya || 0) + '</div>' + (client.fabricNote ? '<div><strong>کپڑا:</strong> ' + client.fabricNote + '</div>' : '') + '</div>' + (client.pockets && client.pockets.length > 0 ? '<div><strong>جیبیں:</strong><div class="pockets-badges">' + client.pockets.map(p => '<span class="pocket-badge">' + p + '</span>').join('') + '</div></div>' : '') + '<div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;"><button class="btn" onclick="printBill(' + client.id + ')" style="flex: 1; padding: 10px; background: #3b82f6; color: white; font-size: 13px;">🧾 بل</button><button class="btn" onclick="editClient(' + client.id + ')" style="flex: 1; padding: 10px; background: #48bb78; color: white; font-size: 13px;">✏️ ترمیم</button><button class="btn" onclick="deleteClient(' + client.id + ')" style="flex: 1; padding: 10px; background: #e53e3e; color: white; font-size: 13px;">🗑️ حذف</button></div></div>';
+    });
+    container.innerHTML = html;
+}
+
+// ===== VOICE SEARCH =====
+function startVoiceSearch(context) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('آپ کے براؤزر میں آواز کی تلاش سپورٹ نہیں ہے۔');
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ur-PK';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    const btn = event.target;
+    btn.classList.add('listening');
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        if (context === 'tracking') {
+            document.getElementById('trackingSearch').value = transcript;
+            filterTracking();
+        } else {
+            document.getElementById('searchInput').value = transcript;
+            performSearch();
+        }
+        btn.classList.remove('listening');
+    };
+
+    recognition.onerror = function() {
+        btn.classList.remove('listening');
+        alert('آواز نہیں سنی گئی، دوبارہ کوشش کریں۔');
+    };
+
+    recognition.onend = function() {
+        btn.classList.remove('listening');
+    };
+
+    recognition.start();
+}
+
+// ===== EDIT / DELETE =====
+function editClient(clientId) {
+    const client = appState.clients.find(c => c.id == clientId);
+    if (!client) return;
+
+    appState.editingClientId = clientId;
+
+    document.getElementById('clientCode').value = client.code;
+    document.getElementById('clientName').value = client.name;
+    document.getElementById('clientPhone').value = client.phone || '';
+    if (client.date) document.getElementById('clientDate').value = client.date;
+    if (client.deliveryDate) document.getElementById('deliveryDate').value = client.deliveryDate;
+    document.getElementById('orderStatus').value = client.status;
+    document.getElementById('fabricNote').value = client.fabricNote || '';
+    document.getElementById('clientRate').value = client.rate || '';
+    document.getElementById('clientAdvance').value = client.advance || '';
+    document.getElementById('urgentFlag').checked = client.urgent || false;
+
+    appState.measurementFields.forEach(field => {
+        const el = document.getElementById(field.id);
+        if (el) el.value = (client.measurements && client.measurements[field.id]) || '';
+    });
+
+    document.querySelectorAll('#addClient input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const pocketMap = { 'سائیڈ جیبیں (قمیض)': 'pocketSide', 'سامنے والی جیب (قمیض)': 'pocketFront', 'چھاتی جیب (قمیض)': 'pocketChest', 'سائیڈ جیبیں (شلوار)': 'pocketShalwarSide', 'پیچھے والی جیب (شلوار)': 'pocketShalwarBack' };
+    (client.pockets || []).forEach(p => { const id = pocketMap[p]; if (id) document.getElementById(id).checked = true; });
+    updatePocketCount();
+
+    if (client.photo) {
+        appState.photoData = client.photo;
+        document.getElementById('photoPreview').src = client.photo;
+        document.getElementById('photoPreview').style.display = 'block';
+        document.getElementById('photoUploadContent').style.display = 'none';
+        document.getElementById('photoUploadArea').classList.add('has-photo');
+        document.getElementById('clearPhotoBtn').style.display = 'block';
+    }
+
+    const banner = document.getElementById('editBanner');
+    banner.style.display = 'flex';
+    document.getElementById('editBannerText').textContent = '✏️ ترمیم ہو رہی ہے: ' + client.name + ' (' + client.code + ')';
+    document.getElementById('saveClientBtn').innerHTML = '💾 تبدیلیاں محفوظ کریں';
+
+    showTab('addClient');
+}
+
+function cancelEditClient() {
+    resetForm();
+    showTab('tracking');
+}
+
+function deleteClient(clientId) {
+    if (!confirm('کیا آپ واقعی اس کلائنٹ کو حذف کرنا چاہتے ہیں؟')) return;
+    appState.clients = appState.clients.filter(c => c.id != clientId);
+    localStorage.setItem('darziClients', JSON.stringify(appState.clients));
+    if (appState.editingClientId == clientId) exitEditMode();
+    updateDashboard();
+    loadTrackingList();
+    updateReports();
+    if (document.getElementById('searchClient').classList.contains('active')) performSearch();
+    alert('کلائنٹ حذف ہو گیا۔');
+}
+
+// ===== BILLING / PRINT =====
+function printBill(clientId) {
+    const client = appState.clients.find(c => c.id == clientId);
+    if (!client) return;
+    const profile = appState.profile || {};
+    const printDate = new Date().toLocaleDateString('ur-PK');
+    const measurementRows = appState.measurementFields.map(field => {
+        const val = (client.measurements && client.measurements[field.id]) || '--';
+        return '<tr><td>' + field.label + '</td><td>' + val + (val !== '--' ? '"' : '') + '</td></tr>';
+    }).join('');
+
+    const billHTML = '<!DOCTYPE html><html lang="ur" dir="rtl"><head><meta charset="UTF-8"><title>بل - ' + client.code + '</title><style>* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; } body { width: 300px; margin: 0 auto; padding: 14px; font-size: 13px; color: #000; } .center { text-align: center; } .shop-name { font-size: 19px; font-weight: bold; margin-bottom: 4px; } .divider { border-top: 1px dashed #000; margin: 10px 0; } .row { display: flex; justify-content: space-between; margin: 4px 0; } table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; } td { padding: 3px 0; } .total-row { font-weight: bold; font-size: 15px; } .footer { text-align: center; margin-top: 14px; font-size: 12px; } @media print { body { width: 100%; } }</style></head><body><div class="center"><div class="shop-name">' + (profile.shopName || 'درزی شاپ') + '</div>' + (profile.address ? '<div>' + profile.address + '</div>' : '') + (profile.phone ? '<div>' + profile.phone + '</div>' : '') + '</div><div class="divider"></div><div class="row"><span>کوڈ:</span><span>' + client.code + '</span></div><div class="row"><span>نام:</span><span>' + client.name + '</span></div>' + (client.phone ? '<div class="row"><span>فون:</span><span>' + client.phone + '</span></div>' : '') + '<div class="row"><span>تاریخ:</span><span>' + (client.date || '') + '</span></div>' + (client.deliveryDate ? '<div class="row"><span>ڈیلیوری:</span><span>' + client.deliveryDate + '</span></div>' : '') + (client.fabricNote ? '<div class="row"><span>کپڑا:</span><span>' + client.fabricNote + '</span></div>' : '') + '<div class="divider"></div><table>' + measurementRows + '</table><div class="divider"></div><div class="row"><span>ریٹ:</span><span>₨' + (client.rate || 0) + '</span></div><div class="row"><span>بیعانہ:</span><span>₨' + (client.advance || 0) + '</span></div><div class="row total-row"><span>باقی:</span><span>₨' + (client.baqaya || 0) + '</span></div><div class="divider"></div><div class="footer">شکریہ!<br>' + printDate + '</div></body></html>';
+
+    const printWindow = window.open('', '_blank', 'width=400,height=650');
+    if (!printWindow) { alert('پرنٹ ونڈو نہیں کھل سکی۔ براہ کرم پاپ اپ بلاکر بند کریں۔'); return; }
+    printWindow.document.write(billHTML);
+    printWindow.document.close();
+    printWindow.onload = function() {
+        printWindow.focus();
+        setTimeout(function() { printWindow.print(); }, 400);
+    };
+}
+
+// ===== THEME =====
+function applyTheme(themeName) {
+    document.body.classList.remove('theme-blue', 'theme-green', 'theme-maroon', 'theme-navy');
+    document.body.classList.add('theme-' + themeName);
+    appState.theme = themeName;
+    localStorage.setItem('darziTheme', themeName);
+    highlightActiveTheme(themeName);
+}
+
+function highlightActiveTheme(themeName) {
+    document.querySelectorAll('.theme-swatch').forEach(btn => {
+        if (btn.getAttribute('data-theme') === themeName) { btn.style.border = '3px solid #2c2c2c'; btn.style.transform = 'scale(1.05)'; }
+        else { btn.style.border = '3px solid transparent'; btn.style.transform = 'scale(1)'; }
+    });
+}
+
+// ===== DARK MODE =====
+function toggleDarkMode() {
+    appState.darkMode = !appState.darkMode;
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darziDarkMode', appState.darkMode);
+    document.querySelector('.dark-mode-toggle').textContent = appState.darkMode ? '☀️' : '🌙';
+}
+
+// ===== MEASUREMENT FIELD SETTINGS =====
+function renderSettingsFieldsList() {
+    const container = document.getElementById('measurementFieldsSettings');
+    if (!container) return;
+    let html = '';
+    appState.measurementFields.forEach((field, index) => {
+        html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:10px; background:#f8f9fa; border-radius:8px; flex-wrap: wrap;"><input type="text" dir="auto" value="' + field.label + '" onchange="renameMeasurementField(' + "'" + field.id + "'" + ', this.value)" style="flex:1; min-width: 120px; padding:10px; border: 2px solid #e9ecef; border-radius: 8px;"><button class="btn" onclick="moveMeasurementField(' + "'" + field.id + "'" + ', -1)" ' + (index === 0 ? 'disabled style="flex:none; padding:10px 14px; background:#6c757d; color:white; opacity:0.4;"' : 'style="flex:none; padding:10px 14px; background:#6c757d; color:white;"') + '>⬆️</button><button class="btn" onclick="moveMeasurementField(' + "'" + field.id + "'" + ', 1)" ' + (index === appState.measurementFields.length - 1 ? 'disabled style="flex:none; padding:10px 14px; background:#6c757d; color:white; opacity:0.4;"' : 'style="flex:none; padding:10px 14px; background:#6c757d; color:white;"') + '>⬇️</button><button class="btn" onclick="deleteMeasurementField(' + "'" + field.id + "'" + ')" style="flex:none; padding:10px 14px; background:#e53e3e; color:white;">🗑️</button></div>';
+    });
+    container.innerHTML = html;
+}
+
+function moveMeasurementField(fieldId, direction) {
+    const index = appState.measurementFields.findIndex(f => f.id === fieldId);
+    if (index === -1) return;
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= appState.measurementFields.length) return;
+    const temp = appState.measurementFields[index]; appState.measurementFields[index] = appState.measurementFields[newIndex]; appState.measurementFields[newIndex] = temp;
+    saveMeasurementFields();
+}
+
+function renameMeasurementField(fieldId, newLabel) {
+    const field = appState.measurementFields.find(f => f.id === fieldId);
+    if (!field) return;
+    field.label = newLabel.trim() || field.label;
+    saveMeasurementFields();
+}
+
+function deleteMeasurementField(fieldId) {
+    if (appState.measurementFields.length <= 1) { alert('کم از کم ایک پیمائش فیلڈ ضروری ہے۔'); return; }
+    if (!confirm('کیا آپ واقعی یہ فیلڈ حذف کرنا چاہتے ہیں؟')) return;
+    appState.measurementFields = appState.measurementFields.filter(f => f.id !== fieldId);
+    saveMeasurementFields();
+}
+
+function addMeasurementField() {
+    const labelInput = document.getElementById('newFieldLabel');
+    const label = labelInput.value.trim();
+    if (!label) { alert('براہ کرم فیلڈ کا نام درج کریں۔'); return; }
+    const newField = { id: 'field_' + Date.now(), label: label, placeholder: '' };
+    appState.measurementFields.push(newField);
+    labelInput.value = '';
+    saveMeasurementFields();
+}
+
+function saveMeasurementFields() {
+    localStorage.setItem('darziMeasurementFields', JSON.stringify(appState.measurementFields));
+    renderSettingsFieldsList();
+}
+
+// ===== SETTINGS =====
+function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
+function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+
+function saveSettings() {
+    appState.profile = { ...appState.profile, name: document.getElementById('settingsName').value.trim(), shopName: document.getElementById('settingsShop').value.trim(), phone: document.getElementById('settingsPhone').value.trim(), address: document.getElementById('settingsAddress').value.trim() };
+    localStorage.setItem('darziProfile', JSON.stringify(appState.profile));
+    updateProfileDisplay();
+    closeSettings();
+    alert('ترتیبات محفوظ ہو گئیں۔');
+}
+
+// ===== NOTIFICATIONS =====
+function requestNotificationPermission() {
+    if (!('Notification' in window)) { alert('آپ کے براؤزر میں نوٹیفکیشن سپورٹ نہیں ہے۔'); return; }
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            alert('نوٹیفکیشن آن ہو گئیں!');
+            checkDeliveryReminders();
+        } else { alert('نوٹیفکیشن کی اجازت نہیں ملی۔'); }
+    });
+}
+
+function checkDeliveryReminders() {
+    if (Notification.permission !== 'granted') return;
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    appState.clients.forEach(client => {
+        if (client.deliveryDate === tomorrowStr && client.status !== 'delivered') {
+            new Notification('یاد دہانی - Darzi Assistant', { body: client.name + ' کا آرڈر ' + client.code + ' کل ڈیلیور ہونا ہے!', icon: '👕' });
+        }
+    });
+}
+
+// ===== AUTO BACKUP =====
+function checkAutoBackup() {
+    const lastBackup = localStorage.getItem('darziLastBackup');
+    const now = new Date().toISOString();
+    if (!lastBackup || (new Date(now) - new Date(lastBackup)) > 7 * 24 * 60 * 60 * 1000) {
+        autoExportData();
+        localStorage.setItem('darziLastBackup', now);
+    }
+}
+
+function autoExportData() {
+    const data = { profile: appState.profile, clients: appState.clients, exportDate: new Date().toISOString() };
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const fileName = 'darzi_auto_backup_' + new Date().toISOString().split('T')[0] + '.json';
+    const link = document.createElement('a');
+    link.href = dataUri; link.download = fileName; link.click();
+}
+
+// ===== DATA EXPORT/IMPORT =====
+function exportData() {
+    const data = { profile: appState.profile, clients: appState.clients, exportDate: new Date().toISOString() };
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const fileName = 'darzi_backup_' + new Date().toISOString().split('T')[0] + '.json';
+    const link = document.createElement('a'); link.href = dataUri; link.download = fileName; link.click();
+    alert('ڈیٹا ایکسپورٹ ہو گیا۔');
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (confirm('کیا آپ موجودہ ڈیٹا کو درآمد شدہ ڈیٹا سے تبدیل کرنا چاہتے ہیں؟')) {
+                    if (data.profile) { appState.profile = data.profile; localStorage.setItem('darziProfile', JSON.stringify(data.profile)); }
+                    if (data.clients) { appState.clients = data.clients; localStorage.setItem('darziClients', JSON.stringify(data.clients)); }
+                    appState.codeCounter = Math.max(appState.codeCounter, getMaxCodeNumber());
+                    localStorage.setItem('darziCodeCounter', appState.codeCounter);
+                    updateProfileDisplay(); updateDashboard(); loadTrackingList(); updateReports(); generateNextCode();
+                    alert('ڈیٹا کامیابی سے درآمد ہو گیا۔');
+                }
+            } catch (error) { alert('غلط فائل فارمیٹ۔'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+function resetAllData() {
+    if (!confirm('کیا آپ واقعی تمام ڈیٹا حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں ہو سکتا۔')) return;
+    localStorage.clear();
+    appState = { profile: null, clients: [], theme: 'blue', currentTrackingFilter: 'all', codeCounter: 0, editingClientId: null, measurementFields: JSON.parse(JSON.stringify(DEFAULT_MEASUREMENT_FIELDS)), darkMode: false, photoData: null };
+    applyTheme('blue'); renderSettingsFieldsList();
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'block';
+    generateNextCode();
+    alert('تمام ڈیٹا حذف ہو گیا۔ براہ کرم ایپ دوبارہ سیٹ اپ کریں۔');
+}
+
+// Close settings when clicking outside
+document.getElementById('settingsModal').addEventListener('click', function(e) { if (e.target === this) closeSettings(); });
+</script>
+</body>
+</html>
